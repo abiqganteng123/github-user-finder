@@ -32,13 +32,7 @@ Aplikasi ini memungkinkan pengguna untuk:
 
 ```plaintext
 github-user-finder/
-├── public/
-│   └── index.html       # File utama untuk aplikasi
-├── src/
-│   ├── components/      # Komponen React
-│   ├── styles/         # File CSS untuk styling
-│   ├── App.js          # Komponen utama aplikasi
-│   └── index.js        # Entry point aplikasi
-├── info.md             # Dokumentasi proyek (file ini)
-├── package.json        # Konfigurasi dependensi dan skrip
+├───
+│   └── index.html       # File utama
+├───
 └── README.md           # Dokumentasi utama proyek
