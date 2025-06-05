@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GitHub User Finder - Material 3 Dark</title>
+  <!-- Roboto Font (Material UI default) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <!-- Animate.css for animation -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <!-- Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      font-family: 'Roboto', sans-serif;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+    #root {
+      width: 100%;
+      max-width: 480px;
+      flex-grow: 1;
+    }
+    footer {
+      margin-top: auto;
+      color: #bb86fc;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 1rem 0;
+      user-select: none;
+    }
+    footer a {
+      color: #bb86fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Header styling */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    /* GitHub logo pulse animation */
+    .github-logo {
+      width: 36px;
+      height: 36px;
+      fill: #bb86fc;
+      animation: pulse 2s infinite ease-in-out;
+      cursor: pointer;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 0.7;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Material UI Core -->
+  <script src="https://unpkg.com/@mui/material@5.14.5/umd/material-ui.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@mui/system@5.14.5/umd/system.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@mui/utils@5.14.5/umd/utils.development.js" crossorigin></script>
+
+  <!-- Axios for HTTP requests -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <script type="text/babel">
+
+    const {
+      createTheme,
+      ThemeProvider,
+      Container,
+      TextField,
+      Button,
+      Avatar,
+      Typography,
+      Card,
+      CardContent,
+      CircularProgress,
+      Box
+    } = MaterialUI;
+
+    const darkTheme = createTheme({
+      palette: {
+        mode: 'dark',
+        primary: { main: '#bb86fc' },
+        background: { default: '#121212' },
+        text: { primary: '#ffffff' }
+      },
+      typography: {
+        fontFamily: 'Roboto, sans-serif',
+      },
+    });
+
+    // SVG GitHub logo with pulse animation
+    function GithubLogo({ onClick }) {
+      return (
+        <svg 
+          onClick={onClick}
+          className="github-logo" 
+          viewBox="0 0 24 24" 
+          xmlns="http://www.w3.org/2000/svg" 
+          role="img" 
+          aria-label="GitHub Logo"
+          >
+          <path d="M12 0.297c-6.63 0-12 5.373-12 12 0 5.303 
+          3.438 9.8 8.205 11.387 0.6 0.113 0.82-0.258 
+          0.82-0.577 0-0.285-0.01-1.04-0.015-2.04-3.338 
+          0.724-4.042-1.61-4.042-1.61-0.546-1.387-1.333-1.757-1.333-1.757-1.09-0.745 
+          0.084-0.729 0.084-0.729 1.205 0.084 1.838 1.236 1.838 1.236 1.07 1.835 
+          2.809 1.305 3.495 0.997 0.108-0.776 0.418-1.305 0.76-1.605-2.665-0.3-5.466-1.335-5.466-5.93 
+          0-1.31 0.465-2.38 1.235-3.22-0.135-0.303-0.54-1.523 0.105-3.176 0 0 1.005-0.322 3.3 1.23 
+          0.96-0.267 1.98-0.399 3-0.405 1.02 0.006 2.04 0.138 3 0.405 2.28-1.552 3.285-1.23 
+          3.285-1.23 0.645 1.653 0.24 2.873 0.12 3.176 0.765 0.84 1.23 1.91 1.23 3.22 
+          0 4.61-2.805 5.625-5.475 5.92 0.42 0.36 0.81 1.096 0.81 2.22 0 1.606-0.015 2.896-0.015 3.286 
+          0 0.315 0.21 0.69 0.825 0.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+      )
+    }
+
+    function GithubUserFinder() {
+      const [username, setUsername] = React.useState('');
+      const [userData, setUserData] = React.useState(null);
+      const [loading, setLoading] = React.useState(false);
+      const [error, setError] = React.useState('');
+      const resultRef = React.useRef(null);
+
+      const fetchUser = async () => {
+        if (!username.trim()) return;
+        setLoading(true);
+        setError('');
+        setUserData(null);
+        try {
+          const res = await axios.get(`https://api.github.com/users/${username.trim()}`);
+          setUserData(res.data);
+          setTimeout(() => {
+            if (resultRef.current) {
+              resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        } catch (err) {
+          setError('User tidak ditemukan atau terjadi kesalahan.');
+        }
+        setLoading(false);
+      };
+
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+          fetchUser();
+        }
+      };
+
+      // Klik logo GitHub akan buka github.com
+      const onLogoClick = () => {
+        window.open('https://github.com', '_blank', 'noopener');
+      };
+
+      return (
+        <ThemeProvider theme={darkTheme}>
+          <Container sx={{ mt: 4, mb: 4 }}>
+            <Box className="header">
+              <GithubLogo onClick={onLogoClick} />
+              <Typography variant="h4" color="primary" component="h1" sx={{ userSelect: 'none' }}>
+                GitHub User Finder
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                label="Cari username GitHub"
+                variant="outlined"
+                fullWidth
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyPress={handleKeyPress}
+                sx={{ bgcolor: '#1e1e1e', borderRadius: 1 }}
+                InputLabelProps={{ style: { color: '#bb86fc' } }}
+                InputProps={{ style: { color: 'white' } }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={fetchUser}
+                disabled={!username.trim() || loading}
+                sx={{ minWidth: '100px' }}
+              >
+                Cari
+              </Button>
+            </Box>
+
+            {loading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <CircularProgress color="primary" />
+              </Box>
+            )}
+
+            {error && (
+              <Typography color="error" align="center" sx={{ mt: 3 }}>
+                {error}
+              </Typography>
+            )}
+
+            {userData && (
+              <Card
+                ref={resultRef}
+                className="animate__animated animate__fadeInUp"
+                sx={{
+                  mt: 4,
+                  backgroundColor: '#1e1e1e',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(187, 134, 252, 0.5)',
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Avatar
+                    src={userData.avatar_url}
+                    alt={userData.login}
+                    sx={{ width: 120, height: 120, mx: 'auto', mb: 2, border: '3px solid #bb86fc' }}
+                  />
+                  <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                    {userData.name || userData.login}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: userData.bio ? 'normal' : 'italic' }}>
+                    {userData.bio || 'Tidak ada bio'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <span className="material-icons" style={{ verticalAlign: 'middle', fontSize: 18, marginRight: 4 }}>location_on</span>
+                    {userData.location || 'Tidak tersedia'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>Repositori Publik:</strong> {userData.public_repos}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>Followers:</strong> {userData.followers}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>Following:</strong> {userData.following}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href={userData.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ mt: 2 }}
+                  >
+                    Lihat Profil di GitHub
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </Container>
+
+          <footer>
+            This website was created by <a href="https://www.instagram.com/ab.iqqq" target="_blank" rel="noopener noreferrer">@ab.iqqq</a>
+          </footer>
+        </ThemeProvider>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<GithubUserFinder />);
+
+  </script>
+</body>
+</html>
