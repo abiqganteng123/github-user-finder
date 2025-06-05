@@ -2,7 +2,7 @@
 
 **GitHub User Finder** adalah Web interaktif untuk mencari dan menampilkan informasi profil pengguna GitHub berdasarkan username. Dibangun dengan **React**, **Material-UI**, dan **Axios**, aplikasi ini mengusung desain **Material 3 Dark** dengan antarmuka responsif, animasi halus, dan pengalaman pengguna yang modern.
 
-![Pratinjau Website] (https://ibb.co/TDQWNHk4) 
+![Pratinjau Website] (https://i.postimg.cc/nzxfQB9F/Screenshot-2025-06-06-03-18-43-877-mark-via-gp.jpg) 
 *Pratinjau website dengan tema gelap dan hasil pencarian pengguna.*
 
 ## Ringkasan Proyek
