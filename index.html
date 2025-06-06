@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GitHub User Finder - abiqq</title>
+  <title>GitHub User Finder - Material 3 Dark</title>
   <!-- Roboto Font (Material UI default) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
   <!-- Animate.css for animation -->
@@ -24,7 +24,7 @@
     }
     #root {
       width: 100%;
-      max-width: 480px;
+      max-width: 540px;
       flex-grow: 1;
     }
     footer {
@@ -43,8 +43,6 @@
     footer a:hover {
       text-decoration: underline;
     }
-
-    /* Header styling */
     .header {
       display: flex;
       align-items: center;
@@ -52,7 +50,6 @@
       gap: 12px;
       margin-bottom: 1rem;
     }
-    /* GitHub logo pulse animation */
     .github-logo {
       width: 36px;
       height: 36px;
@@ -70,26 +67,69 @@
         opacity: 0.7;
       }
     }
+    .user-list-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 24px;
+      justify-content: center;
+    }
+    .user-card {
+      background: #1e1e1e;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(187,134,252,0.10);
+      padding: 16px 12px;
+      width: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      border: 2px solid transparent;
+      min-height: 180px;
+    }
+    .user-card:hover {
+      box-shadow: 0 6px 20px rgba(187,134,252,0.24);
+      border: 2px solid #bb86fc;
+      transform: translateY(-4px) scale(1.03);
+    }
+    .user-card .MuiAvatar-root {
+      width: 56px !important;
+      height: 56px !important;
+      margin-bottom: 8px;
+      border: 2px solid #bb86fc;
+    }
+    .user-card .username {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #bb86fc;
+      margin-bottom: 2px;
+      word-break: break-all;
+    }
+    .user-card .type {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+    @media (max-width: 600px) {
+      #root { max-width: 100vw; }
+      .user-card { width: 44vw; min-width: 120px; }
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
-
   <!-- React & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-
   <!-- Babel for JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <!-- Material UI Core -->
   <script src="https://unpkg.com/@mui/material@5.14.5/umd/material-ui.development.js" crossorigin></script>
   <script src="https://unpkg.com/@mui/system@5.14.5/umd/system.development.js" crossorigin></script>
   <script src="https://unpkg.com/@mui/utils@5.14.5/umd/utils.development.js" crossorigin></script>
-
   <!-- Axios for HTTP requests -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
   <script type="text/babel">
 
     const {
@@ -118,7 +158,6 @@
       },
     });
 
-    // SVG GitHub logo with pulse animation
     function GithubLogo({ onClick }) {
       return (
         <svg 
@@ -144,39 +183,73 @@
       )
     }
 
+    function UserCard({ user, onClick }) {
+      return (
+        <div className="user-card animate__animated animate__fadeInUp" onClick={() => onClick(user.login)}>
+          <Avatar src={user.avatar_url} alt={user.login} />
+          <div className="username">{user.login}</div>
+          <div className="type">{user.type}</div>
+        </div>
+      );
+    }
+
     function GithubUserFinder() {
       const [username, setUsername] = React.useState('');
-      const [userData, setUserData] = React.useState(null);
+      const [userList, setUserList] = React.useState([]);
       const [loading, setLoading] = React.useState(false);
       const [error, setError] = React.useState('');
+      const [selectedUser, setSelectedUser] = React.useState(null);
+      const [userDetail, setUserDetail] = React.useState(null);
       const resultRef = React.useRef(null);
+      const detailRef = React.useRef(null);
 
-      const fetchUser = async () => {
+      // Fetch list of users
+      const fetchUsers = async () => {
         if (!username.trim()) return;
         setLoading(true);
         setError('');
-        setUserData(null);
+        setUserList([]);
+        setSelectedUser(null);
+        setUserDetail(null);
         try {
-          const res = await axios.get(`https://api.github.com/users/${username.trim()}`);
-          setUserData(res.data);
+          const res = await axios.get(`https://api.github.com/search/users?q=${encodeURIComponent(username.trim())}&per_page=12`);
+          setUserList(res.data.items || []);
           setTimeout(() => {
             if (resultRef.current) {
               resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
           }, 100);
         } catch (err) {
-          setError('User tidak ditemukan atau terjadi kesalahan.');
+          setError('Terjadi kesalahan saat mencari user.');
+        }
+        setLoading(false);
+      };
+
+      // Fetch detail for selected user
+      const fetchUserDetail = async (login) => {
+        setSelectedUser(login);
+        setUserDetail(null);
+        setLoading(true);
+        try {
+          const res = await axios.get(`https://api.github.com/users/${login}`);
+          setUserDetail(res.data);
+          setTimeout(() => {
+            if (detailRef.current) {
+              detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        } catch (err) {
+          setUserDetail(null);
         }
         setLoading(false);
       };
 
       const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
-          fetchUser();
+          fetchUsers();
         }
       };
 
-      // Klik logo GitHub akan buka github.com
       const onLogoClick = () => {
         window.open('https://github.com', '_blank', 'noopener');
       };
@@ -206,7 +279,7 @@
               <Button
                 variant="contained"
                 color="primary"
-                onClick={fetchUser}
+                onClick={fetchUsers}
                 disabled={!username.trim() || loading}
                 sx={{ minWidth: '100px' }}
               >
@@ -226,9 +299,19 @@
               </Typography>
             )}
 
-            {userData && (
+            {/* User List */}
+            {userList.length > 0 && (
+              <div ref={resultRef} className="user-list-grid">
+                {userList.map(user => (
+                  <UserCard key={user.login} user={user} onClick={fetchUserDetail} />
+                ))}
+              </div>
+            )}
+
+            {/* User Detail */}
+            {userDetail && (
               <Card
-                ref={resultRef}
+                ref={detailRef}
                 className="animate__animated animate__fadeInUp"
                 sx={{
                   mt: 4,
@@ -239,33 +322,33 @@
               >
                 <CardContent sx={{ textAlign: 'center' }}>
                   <Avatar
-                    src={userData.avatar_url}
-                    alt={userData.login}
+                    src={userDetail.avatar_url}
+                    alt={userDetail.login}
                     sx={{ width: 120, height: 120, mx: 'auto', mb: 2, border: '3px solid #bb86fc' }}
                   />
                   <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                    {userData.name || userData.login}
+                    {userDetail.name || userDetail.login}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: userData.bio ? 'normal' : 'italic' }}>
-                    {userData.bio || 'Tidak ada bio'}
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: userDetail.bio ? 'normal' : 'italic' }}>
+                    {userDetail.bio || 'Tidak ada bio'}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 0.5 }}>
                     <span className="material-icons" style={{ verticalAlign: 'middle', fontSize: 18, marginRight: 4 }}>location_on</span>
-                    {userData.location || 'Tidak tersedia'}
+                    {userDetail.location || 'Tidak tersedia'}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    <strong>Repositori Publik:</strong> {userData.public_repos}
+                    <strong>Repositori Publik:</strong> {userDetail.public_repos}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    <strong>Followers:</strong> {userData.followers}
+                    <strong>Followers:</strong> {userDetail.followers}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    <strong>Following:</strong> {userData.following}
+                    <strong>Following:</strong> {userDetail.following}
                   </Typography>
                   <Button
                     variant="outlined"
                     color="primary"
-                    href={userData.html_url}
+                    href={userDetail.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{ mt: 2 }}
@@ -276,7 +359,6 @@
               </Card>
             )}
           </Container>
-
           <footer>
             This website was created by <a href="https://www.instagram.com/ab.iqqq" target="_blank" rel="noopener noreferrer">@ab.iqqq</a>
           </footer>
